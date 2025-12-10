@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sprite Sheet to GIF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: #020617;
+      --accent: #38bdf8;
+      --accent-soft: #0ea5e9;
+      --border: #1f2937;
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0b1120, #020617 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: radial-gradient(circle at top left, #111827, #020617 55%);
+      border-radius: 10px;
+      border: 1px solid #111827;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+      padding: 18px 20px 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 850px) {
+      .app {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      background: #020617;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+
+    .subtitle {
+      margin: 2px 0 12px;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--text-soft);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input[type="file"],
+    input[type="number"] {
+      width: 100%;
+      font-size: 13px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+    }
+
+    input[type="number"] {
+      background: #020617;
+    }
+
+    input[type="file"] {
+      padding: 5px 6px;
+    }
+
+    .field {
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .row > .field {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    button {
+      border-radius: 999px;
+      border: 1px solid var(--accent-soft);
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #0b1120;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 7px 14px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(1.05);
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .status {
+      font-size: 11px;
+      margin-top: 6px;
+      color: var(--text-soft);
+      min-height: 14px;
+    }
+
+    .status strong {
+      color: var(--accent);
+    }
+
+    .preview-panel {
+      border-left: 1px solid #111827;
+      padding-left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (max-width: 850px) {
+      .preview-panel {
+        border-left: none;
+        border-top: 1px solid #111827;
+        padding-left: 0;
+        padding-top: 10px;
+      }
+    }
+
+    .preview-heading {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+    }
+
+    .preview-box {
+      background: #020617;
+      border-radius: 8px;
+      border: 1px solid #111827;
+      padding: 10px;
+      min-height: 210px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .preview-box-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preview-box small {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    #gifPreview {
+      max-width: 100%;
+      max-height: 220px;
+      image-rendering: pixelated;
+    }
+
+    #sheetPreview {
+      max-width: 100%;
+      max-height: 140px;
+      image-rendering: pixelated;
+      border-radius: 4px;
+      border: 1px solid #111827;
+    }
+
+    .link-row {
+      font-size: 11px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    a.download-link {
+      color: var(--accent-soft);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- Controls -->
+  <div>
+    <h1>
+      SPRITE → GIF
+      <span class="badge">Offline / GitHub-safe</span>
+    </h1>
+    <div class="subtitle">
+      Load a horizontal sprite sheet, set frame count & fps, and generate a GIF client-side.
+    </div>
+
+    <div class="field">
+      <label for="sheetInput">Sprite sheet (PNG / JPG)</label>
+      <input id="sheetInput" type="file" accept="image/*" />
+      <div class="small">
+        Expected layout: frames in a single row (no vertical strips).
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="frameCount">Frame count</label>
+        <input id="frameCount" type="number" min="1" value="24" />
+        <div class="small">Total frames in the sheet (columns).</div>
+      </div>
+      <div class="field">
+        <label for="fps">FPS</label>
+        <input id="fps" type="number" min="1" max="60" value="12" />
+        <div class="small">Frames per second of the GIF.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="scale">Output scale</label>
+        <input id="scale" type="number" min="1" max="16" value="2" />
+        <div class="small">1 = original frame size, 2 = 2×, etc.</div>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button id="generateBtn" disabled>Generate GIF</button>
+        <div class="small">Button enables when a sprite sheet is loaded.</div>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-panel">
+    <div class="preview-heading">Sprite sheet preview</div>
+    <div class="preview-box" style="margin-bottom:8px;">
+      <div class="preview-box-inner">
+        <img id="sheetPreview" alt="Sprite sheet preview" />
+        <small id="sheetInfo" class="small">No sprite sheet loaded.</small>
+      </div>
+    </div>
+
+    <div class="preview-heading">Generated GIF</div>
+    <div class="preview-box">
+      <div class="preview-box-inner">
+        <img id="gifPreview" alt="GIF preview" />
+        <div class="link-row" id="gifLinks" style="display:none;">
+          <a id="downloadLink" class="download-link" href="#" download="sprite.gif">Download GIF</a>
+          <span class="small" id="gifSizeInfo"></span>
+        </div>
+        <small id="gifHint" class="small">Generate a GIF to see the animation.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- gif.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script>
+  const sheetInput = document.getElementById("sheetInput");
+  const frameCountInput = document.getElementById("frameCount");
+  const fpsInput = document.getElementById("fps");
+  const scaleInput = document.getElementById("scale");
+  const generateBtn = document.getElementById("generateBtn");
+  const statusEl = document.getElementById("status");
+
+  const sheetPreview = document.getElementById("sheetPreview");
+  const sheetInfo = document.getElementById("sheetInfo");
+  const gifPreview = document.getElementById("gifPreview");
+  const gifHint = document.getElementById("gifHint");
+  const gifLinks = document.getElementById("gifLinks");
+  const downloadLink = document.getElementById("downloadLink");
+  const gifSizeInfo = document.getElementById("gifSizeInfo");
+
+  let sheetImage = null;
+
+  // Load sprite sheet
+  sheetInput.addEventListener("change", () => {
+    const file = sheetInput.files[0];
+    if (!file) {
+      sheetImage = null;
+      generateBtn.disabled = true;
+      sheetPreview.src = "";
+      sheetInfo.textContent = "No sprite sheet loaded.";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        sheetImage = img;
+        sheetPreview.src = img.src;
+        sheetInfo.textContent = `Sheet: ${img.width} × ${img.height}px`;
+        generateBtn.disabled = false;
+        statusEl.textContent = "";
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function setStatus(text, isError = false) {
+    statusEl.innerHTML = text ? (isError ? '<strong>' + text + "</strong>" : text) : "";
+  }
+
+  generateBtn.addEventListener("click", () => {
+    if (!sheetImage) {
+      setStatus("Please load a sprite sheet first.", true);
+      return;
+    }
+
+    const frameCount = parseInt(frameCountInput.value, 10);
+    const fps = parseInt(fpsInput.value, 10);
+    const scale = parseInt(scaleInput.value, 10) || 1;
+
+    if (!frameCount || frameCount < 1) {
+      setStatus("Frame count must be at least 1.", true);
+      return;
+    }
+    if (!fps || fps < 1) {
+      setStatus("FPS must be at least 1.", true);
+      return;
+    }
+
+    const frameWidth = sheetImage.width / frameCount;
+    const frameHeight = sheetImage.height;
+
+    if (!Number.isInteger(frameWidth)) {
+      setStatus(
+        "⚠️ Sprite sheet width is not evenly divisible by frame count. " +
+        "Make sure frames are laid out in a single row.",
+        true
+      );
+      return;
+    }
+
+    const outW = frameWidth * scale;
+    const outH = frameHeight * scale;
+
+    // Create GIF encoder
+    const gif = new GIF({
+      workers: 2,
+      quality: 10,
+      width: outW,
+      height: outH,
+      workerScript:
+        "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js"
+    });
+
+    // Canvas used to draw each frame
+    const canvas = document.createElement("canvas");
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    const delay = 1000 / fps;
+
+    setStatus("Building GIF… 0%", false);
+    gifHint.textContent = "Encoding… this can take a moment for big sheets.";
+    gifLinks.style.display = "none";
+    gifPreview.src = "";
+
+    // Add frames from sprite sheet
+    for (let i = 0; i < frameCount; i++) {
+      ctx.setTransform(scale, 0, 0, scale, 0, 0); // scale up via transform
+      ctx.clearRect(0, 0, outW, outH);
+      ctx.drawImage(
+        sheetImage,
+        frameWidth * i,
+        0,
+        frameWidth,
+        frameHeight,
+        0,
+        0,
+        frameWidth,
+        frameHeight
+      );
+
+      gif.addFrame(canvas, { copy: true, delay });
+    }
+
+    gif.on("progress", p => {
+      const pct = Math.round(p * 100);
+      setStatus("Building GIF… <strong>" + pct + "%</strong>");
+    });
+
+    gif.on("finished", blob => {
+      const url = URL.createObjectURL(blob);
+      gifPreview.src = url;
+      gifHint.textContent = "GIF generated.";
+      gifLinks.style.display = "flex";
+      downloadLink.href = url;
+
+      const kb = (blob.size / 1024).toFixed(1);
+      gifSizeInfo.textContent = `Size: ${outW}×${outH}px · ${kb} KB`;
+      setStatus("Done!", false);
+    });
+
+    gif.render();
+  });
+</script>
+</body>
+</html>
